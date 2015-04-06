@@ -1,0 +1,354 @@
+<html>
+
+<head>
+	<title>Toe Tic Tac</title>
+
+	<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	
+	<style>
+		body {
+			/* Main body properties */
+			background: #EEE;
+			
+			/* Text properties */
+			font: 13px/20px normal Helvetica, Arial, sans-serif;
+			color: #4F5155;
+			
+		}
+		
+		table {
+			border:1px solid grey;
+			
+			margin-left:auto;
+			margin-right:auto;
+		}
+		
+		.tttimg {
+			width:80px;
+			height:80px;
+		}
+		
+		#youare {
+			text-align:center;
+		}
+	</style>
+
+</head>
+
+<body>
+	<br/><br/>
+	
+	<h1 id="youare"></h1>
+	<br/><br/><br/>
+	
+	<table border="1">
+		<tr>
+			<td><img class="tttimg" id="boxA1" src="NoSelection.png"/></td>
+			<td><img class="tttimg" id="boxA2" src="NoSelection.png"/></td>
+			<td><img class="tttimg" id="boxA3" src="NoSelection.png"/></td>
+		</tr>
+		<tr>
+			<td><img class="tttimg" id="boxB1" src="NoSelection.png"/></td>
+			<td><img class="tttimg" id="boxB2" src="NoSelection.png"/></td>
+			<td><img class="tttimg" id="boxB3" src="NoSelection.png"/></td>
+		</tr>
+		<tr>
+			<td><img class="tttimg" id="boxC1" src="NoSelection.png"/></td>
+			<td><img class="tttimg" id="boxC2" src="NoSelection.png"/></td>
+			<td><img class="tttimg" id="boxC3" src="NoSelection.png"/></td>
+		</tr>
+	</table>
+			
+	<script>
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		
+		// 0 = NoSelection
+		// 1 = SelectionX
+		// 2 = SelectionO
+		var boxA1 = 0;
+		var boxA2 = 0;
+		var boxA3 = 0;
+		
+		var boxB1 = 0;
+		var boxB2 = 0;
+		var boxB3 = 0;
+
+		var boxC1 = 0;
+		var boxC2 = 0;
+		var boxC3 = 0;	
+		
+		
+		var winAnimOn = 0;
+		var refreshTime = 1500;
+		var gameOver = false;
+		
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		
+		var XorO = Math.round(Math.random()); // Randomly chooses between 0 or 1
+						// 0 = X
+						// 1 = O
+						
+		var curMove = XorO; // The player always goes first - so, if the player is X, X goes first.
+		
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		
+		
+		
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		//----------------------------   DOCUMENT LOAD   --------------------------------
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		$(document).ready(function(){
+			if(XorO == 0) { $( "#youare" ).text("You are X"); }
+			else if(XorO == 1) { $( "#youare" ).text("You are O"); }
+		});
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		
+		
+		
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		//------------------------------   MOUSE OVER   ---------------------------------
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		$( ".tttimg" ).mouseover(function() {
+			HandleMouseOver(this, 1);
+		}).mouseout(function() {
+			HandleMouseOver(this, 0);
+		});
+		
+		function HandleMouseOver(i, inOut)
+		{
+			if(!IsPlayerTurn())
+			{
+				if(!winAnimOn) {
+					if(inOut == 1) {
+						$( i ).css("background-color","#FF3300");
+					} else if(inOut == 0) {
+						$( i ).css("background-color","");
+					}
+				}
+			}
+			
+			
+			if(IsSelectionEmpty(i)) {
+				if(inOut == 1) {
+					if(XorO == 0) { SetBoxImage(i, "X"); }
+					else if(XorO == 1) { SetBoxImage(i, "O"); }
+				} else if(inOut == 0) {
+					$( i ).attr('src','NoSelection.png');
+				}
+			}
+			else
+			{
+				if(!winAnimOn) {
+					if(inOut == 1) {
+						$( i ).css("background-color","#FF3300");
+					} else if(inOut == 0) {
+						$( i ).css("background-color","");
+					}
+				}
+			}
+		}
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		
+	
+	
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		//------------------------------   CLICK EVENT  ---------------------------------
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		$( ".tttimg" ).click(function() {
+			HandleClick(this);
+		});
+		
+		function HandleClick(i)
+		{
+			if(!gameOver) {
+				if(IsSelectionEmpty(i)) {
+					if(XorO == 0) { SetBoxImage(i, "X"); SetBoxSelection(i, 1); CheckWin(1); }
+					else if(XorO == 1)  { SetBoxImage(i, "O"); SetBoxSelection(i, 2); CheckWin(2); }
+					
+					if(!gameOver) {
+						$( i ).css("background-color","#0AD100");
+						AI();
+						setTimeout(function() { $( i ).css("background-color",""); }, 250);
+					}
+				}
+			}
+		}
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+		
+	
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		//------------------------   ARTIFICIAL INTELLIGENCE  ---------------------------
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-		
+		function AI()
+		{
+			var randPos = Math.floor(Math.random() * 9) + 1;
+			
+			if(XorO == 0)
+			{
+				switch(randPos)
+				{
+					case 1:
+						if(boxA1 == 0) { SetBoxImage("#boxA1", "O"); boxA1 = 2; } else AI();
+						break;
+					case 2:
+						if(boxA2 == 0) { SetBoxImage("#boxA2", "O"); boxA2 = 2; } else AI();
+						break;
+					case 3:
+						if(boxA3 == 0) { SetBoxImage("#boxA3", "O"); boxA3 = 2; } else AI();
+						break;
+					case 4:
+						if(boxB1 == 0) { SetBoxImage("#boxB1", "O"); boxB1 = 2; } else AI();
+						break;
+					case 5: 
+						if(boxB2 == 0) { SetBoxImage("#boxB2", "O"); boxB2 = 2; } else AI();
+						break;
+					case 6:
+						if(boxB3 == 0) { SetBoxImage("#boxB3", "O"); boxB3 = 2; } else AI();
+						break;
+					case 7:
+						if(boxC1 == 0) { SetBoxImage("#boxC1", "O"); boxC1 = 2; } else AI();
+						break;
+					case 8:
+						if(boxC2 == 0) { SetBoxImage("#boxC2", "O"); boxC2 = 2; } else AI();
+						break;
+					case 9:
+						if(boxC3 == 0) { SetBoxImage("#boxC3", "O"); boxC3 = 2; } else AI();
+						break;
+
+					default: break;
+				}
+				CheckWin(2);
+			}
+			
+			if(XorO == 1)
+			{
+				switch(randPos)
+				{
+					case 1:
+						if(boxA1 == 0) { SetBoxImage("#boxA1", "X"); boxA1 = 1; } else AI();
+						break;
+					case 2:
+						if(boxA2 == 0) { SetBoxImage("#boxA2", "X"); boxA2 = 1; } else AI();
+						break;
+					case 3:
+						if(boxA3 == 0) { SetBoxImage("#boxA3", "X"); boxA3 = 1; } else AI();
+						break;
+					case 4:
+						if(boxB1 == 0) { SetBoxImage("#boxB1", "X"); boxB1 = 1; } else AI();
+						break;
+					case 5: 
+						if(boxB2 == 0) { SetBoxImage("#boxB2", "X"); boxB2 = 1; } else AI();
+						break;
+					case 6:
+						if(boxB3 == 0) { SetBoxImage("#boxB3", "X"); boxB3 = 1; } else AI();
+						break;
+					case 7:
+						if(boxC1 == 0) { SetBoxImage("#boxC1", "X"); boxC1 = 1; } else AI();
+						break;
+					case 8:
+						if(boxC2 == 0) { SetBoxImage("#boxC2", "X"); boxC2 = 1; } else AI();
+						break;
+					case 9:
+						if(boxC3 == 0) { SetBoxImage("#boxC3", "X"); boxC3 = 1; } else AI();
+						break;
+
+					default: break;
+				}
+				CheckWin(1);
+			}
+		}	
+		
+		
+		function CheckWin(i)
+		{ 
+			if(boxA1 == i && boxA2 == i && boxA3 == i) { WinAnimation("#boxA1", "#boxA2", "#boxA3");  setTimeout(function() { location.reload(); }, refreshTime); gameOver = true; }
+			
+			else if(boxB1 == i && boxB2 == i && boxB3 == i) { WinAnimation("#boxB1", "#boxB2", "#boxB3");  setTimeout(function() { location.reload(); }, refreshTime); gameOver = true; }
+			
+			else if(boxC1 == i && boxC2 == i && boxC3 == i) { WinAnimation("#boxC1", "#boxC2", "#boxC3");  setTimeout(function() { location.reload(); }, refreshTime); gameOver = true; }
+			
+			else if(boxA1 == i && boxB1 == i && boxC1 == i) { WinAnimation("#boxA1", "#boxB1", "#boxC1");  setTimeout(function() { location.reload(); }, refreshTime); gameOver = true; }
+			
+			else if(boxA2 == i && boxB2 == i && boxC2 == i) { WinAnimation("#boxA2", "#boxB2", "#boxC2");  setTimeout(function() { location.reload(); }, refreshTime); gameOver = true; }
+			
+			else if(boxA3 == i && boxB3 == i && boxC3 == i) { WinAnimation("#boxA3", "#boxB3", "#boxC3");  setTimeout(function() { location.reload(); }, refreshTime); gameOver = true; }
+			
+			else if(boxA3 == i && boxB2 == i && boxC1 == i) { WinAnimation("#boxA3", "#boxB2", "#boxC1");  setTimeout(function() { location.reload(); }, refreshTime); gameOver = true; }
+			
+			else if(boxA1 == i && boxB2 == i && boxC3 == i) { WinAnimation("#boxA1", "#boxB2", "#boxC3");  setTimeout(function() { location.reload(); }, refreshTime); gameOver = true; }
+		}
+		
+		function WinAnimation(a, b, c)
+		{
+			winAnimOn = 1;
+			
+			$( a ).css("background-color","#0AD100");
+			//setTimeout(function() { $( a ).css("background-color",""); }, 500);
+			
+			$( b ).css("background-color","#0AD100");
+			//setTimeout(function() { $( b ).css("background-color",""); }, 500);
+			
+			$( c ).css("background-color","#0AD100");
+			//setTimeout(function() { $( c ).css("background-color",""); }, 500);
+		}
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		
+		
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		//----------------------------   OTHER FUNCTIONS  -------------------------------
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-		
+		function IsSelectionEmpty(i)
+		{
+			if($( i ).attr('id') == 'boxA1') { if(boxA1 != 0) { return false; } }
+			if($( i ).attr('id') == 'boxA2') { if(boxA2 != 0) { return false; } }
+			if($( i ).attr('id') == 'boxA3') { if(boxA3 != 0) { return false; } }
+			
+			if($( i ).attr('id') == 'boxB1') { if(boxB1 != 0) { return false; } }
+			if($( i ).attr('id') == 'boxB2') { if(boxB2 != 0) { return false; } }
+			if($( i ).attr('id') == 'boxB3') { if(boxB3 != 0) { return false; } }
+			
+			if($( i ).attr('id') == 'boxC1') { if(boxC1 != 0) { return false; } }
+			if($( i ).attr('id') == 'boxC2') { if(boxC2 != 0) { return false; } }
+			if($( i ).attr('id') == 'boxC3') { if(boxC3 != 0) { return false; } }
+			
+			return true;
+		}
+		
+		function SetBoxSelection(i, selection)
+		{
+			if($( i ).attr('id') == 'boxA1') { boxA1 = selection; }
+			if($( i ).attr('id') == 'boxA2') { boxA2 = selection; }
+			if($( i ).attr('id') == 'boxA3') { boxA3 = selection; }
+			
+			if($( i ).attr('id') == 'boxB1') { boxB1 = selection; }
+			if($( i ).attr('id') == 'boxB2') { boxB2 = selection; }
+			if($( i ).attr('id') == 'boxB3') { boxB3 = selection; }
+			
+			if($( i ).attr('id') == 'boxC1') { boxC1 = selection; }
+			if($( i ).attr('id') == 'boxC2') { boxC2 = selection; }
+			if($( i ).attr('id') == 'boxC3') { boxC3 = selection; }
+		}
+				
+		function IsPlayerTurn()
+		{
+			if(curMove == XorO) return true;
+			else return false;
+		}
+		
+		function SetBoxImage(e, i)
+		{
+			var image = "Selection" + i + ".png";
+			$( e ).attr('src', image);
+		}
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+		//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+	</script>
+</body>
+
+</html>
